@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🪂 Airdrop Frontend
 
-## Getting Started
+This is the frontend interface for interacting with an ERC20 airdrop smart contract. It allows users to verify eligibility using a Merkle proof and claim their allocated tokens directly from the browser.
 
-First, run the development server:
+---
+
+## 🚀 Features
+
+- 🔐 Merkle proof-based eligibility verification
+- 💸 Token claim interface
+- 🔗 Wallet connection (via RainbowKit + wagmi)
+- 📊 Admin page for viewing contract claim status
+
+---
+
+## 📁 Project Structure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+.
+├── public/
+│   └──
+├── src/
+│   ├── abi/                   # Contract ABI
+│   ├── app/
+│   │   ├── claim/             # Claim page (for eligible users)
+│   │   ├── admin/             # Admin dashboard (optional)
+│   │   ├── api/merkle/        # Merkle endpoint (serves `output.json`)
+│   │   ├── layout.tsx         # App layout
+│   │   ├── page.tsx           # Homepage
+│   │   └── providers.tsx      # wagmi / RainbowKit providers
+│   ├── chains/                # Network config (e.g., Anvil, Goerli, etc.)
+│   └── components/            # Shared components (e.g., nav-bar)
+│   └── merkle/output.json     # Merkle tree data (leaf + proof + root)
+
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+git clone https://github.com/wmachaca/airdrop-frontend.git
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+cd airdrop-frontend
 
-## Learn More
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# Copy the Merkle tree output (typically a .json with leaf, proof, and root):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+/src/merkle/output.json
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+# Set up your environment variables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+NEXT_PUBLIC_ADMIN_ADDRESS=
+
+NEXT_PUBLIC_AIRDROP_CONTRACT_ADDRESS=
+
+
+# Run the development server:
+
+npm run dev
+```
