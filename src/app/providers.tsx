@@ -2,14 +2,11 @@
 
 import '@rainbow-me/rainbowkit/styles.css';
 import {
-  getDefaultWallets,
+  getDefaultConfig,
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
-import {
-  configureChains,
-  createConfig,
-  WagmiConfig,
-} from 'wagmi';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   mainnet,
   polygon,
@@ -17,31 +14,26 @@ import {
   arbitrum,
   sepolia
 } from 'wagmi/chains';
-import { publicProvider } from 'wagmi/providers/public';
 
-const { chains, publicClient } = configureChains(
-  [sepolia], // change to mainnet when needed
-  [publicProvider()]
-);
+import { anvil } from '../chains/anvil';
 
-const { connectors } = getDefaultWallets({
+
+const config = getDefaultConfig({
   appName: 'Rather Airdrop',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // https://cloud.walletconnect.com/
-  chains,
+  projectId: '052975ce93bb9660848050292e1a682f', // Get this from https://cloud.walletconnect.com
+  chains: [mainnet, polygon, optimism, arbitrum, sepolia, anvil],
+  ssr: true,//only for server side rendering
 });
 
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-});
+const queryClient = new QueryClient();
+
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
-        {children}
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>{children}</RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
