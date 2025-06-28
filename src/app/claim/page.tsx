@@ -28,12 +28,29 @@ export default function ClaimPage() {
   const [alreadyClaimed, setAlreadyClaimed] = useState<string>('0');
   const [claimAmount, setClaimAmount] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);  
 
   useEffect(() => {
     if (isConnected && address) {
       verifyEligibility(address);
+      fetchPauseStatus(); 
     }
   }, [address, isConnected]);
+
+  const fetchPauseStatus = async () => {
+    if (!publicClient) return;
+    try {
+      const [, , , paused] = await publicClient.readContract({
+        address: AIRDROP_CONTRACT_ADDRESS,
+        abi: airdropAbi,
+        functionName: 'getAirdropStatus',
+      }) as [bigint, bigint, bigint, boolean];
+  
+      setIsPaused(paused);
+    } catch (err) {
+      console.error('Error fetching paused status:', err);
+    }
+  };  
 
   const verifyEligibility = async (userAddress: string) => {
     try {
@@ -168,7 +185,11 @@ if (claimAmountWei > remainingAmount) {
                 Connected wallet: <span className="font-mono">{address}</span>
               </p>
             </div>
-
+            {isPaused && (
+  <div className="bg-yellow-800 text-yellow-200 text-center px-4 py-3 rounded-md border border-yellow-600">
+    ⚠️ The airdrop is currently paused. You will not be able to claim tokens until it is resumed.
+  </div>
+)}
             {merkleEntry ? (
               <>
                 <div className="bg-muted p-4 rounded-lg space-y-2">
@@ -201,14 +222,14 @@ if (claimAmountWei > remainingAmount) {
 
                 <button
                   onClick={handleClaim}
-                  disabled={isLoading || !claimAmount}
+                  disabled={isLoading || !claimAmount || isPaused}
                   className={`w-full py-3 text-lg font-semibold rounded-md transition-all ${
                     isLoading
       ? 'bg-gray-600 cursor-not-allowed text-white'
       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  {isLoading ? 'Processing...' : 'Claim Tokens'}
+                    {isPaused ? 'Airdrop Paused' : isLoading ? 'Processing...' : 'Claim Tokens'}
                 </button>
               </>
             ) : (

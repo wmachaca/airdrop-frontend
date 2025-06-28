@@ -64,6 +64,11 @@ export default function AdminPage() {
           }) as Promise<[string[], bigint[]]>,
         ]);
 
+
+        //console.log("Frontend ADMIN_ADDRESS:", process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase());
+//console.log("Connected Wallet:", address);
+//console.log("Contract Owner (read from chain):", owner);
+
       setIsOwner(getAddress(owner as string) === normalized);
       setIsPaused(paused as boolean);
 
@@ -86,24 +91,26 @@ export default function AdminPage() {
   };
 
   const togglePause = async () => {
-    if (!walletClient) return;
-    if (!publicClient) {
-      console.error('publicClient is not ready');
+    if (!walletClient || !publicClient) {
+      console.error('walletClient or publicClient not ready');
       return;
     }
-
+  
     try {
       setLoading(prev => ({ ...prev, pause: true }));
+  
+      const functionName = isPaused ? 'unpauseAirdrop' : 'pauseAirdrop';
+  
       const { request } = await publicClient.simulateContract({
         address: AIRDROP_CONTRACT_ADDRESS,
         abi: airdropAbi,
-        functionName: 'pauseAirdrop',
-        args: [!isPaused],
+        functionName,
         account: walletClient.account,
       });
-
+  
       const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
+  
       setIsPaused(!isPaused);
     } catch (err) {
       console.error('Pause toggle failed:', err);
@@ -118,7 +125,6 @@ export default function AdminPage() {
       console.error('publicClient is not ready');
       return;
     }
-
     try {
       setLoading(prev => ({ ...prev, recover: true }));
       const { request } = await publicClient.simulateContract({
@@ -130,6 +136,9 @@ export default function AdminPage() {
 
       const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
+
+      await new Promise(res => setTimeout(res, 500));
+
       await loadContractData();
     } catch (err) {
       console.error('Recovery failed:', err);
