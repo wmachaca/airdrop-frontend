@@ -180,7 +180,11 @@ export default function AdminPage() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={togglePause}
-                    disabled={loading.pause || loading.general}
+                    disabled={
+                      loading.pause ||
+                      loading.general ||
+                      (Number(stats.totalTokens) === 0)
+                    }
                     className={`px-4 py-2 rounded-md text-white font-semibold transition-all ${
                       loading.pause
                         ? 'bg-gray-600 cursor-not-allowed'
@@ -198,7 +202,12 @@ export default function AdminPage() {
 
                   <button
                     onClick={recoverTokens}
-                    disabled={!isPaused || loading.recover || loading.general}
+                    disabled={
+                      !isPaused || 
+                      loading.recover || 
+                      loading.general || 
+                      Number(stats.remainingTokens) === 0
+                    }
                     className={`px-4 py-2 rounded-md font-semibold text-white transition-all ${
                       loading.recover
                         ? 'bg-gray-600 cursor-not-allowed'
