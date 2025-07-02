@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { formatEther, getAddress } from 'viem';
 import airdropAbi from '../../abi/airdrop.json'; // Paste your ABI here
 
@@ -65,6 +64,11 @@ export default function AdminPage() {
           }) as Promise<[string[], bigint[]]>,
         ]);
 
+
+        //console.log("Frontend ADMIN_ADDRESS:", process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase());
+//console.log("Connected Wallet:", address);
+//console.log("Contract Owner (read from chain):", owner);
+
       setIsOwner(getAddress(owner as string) === normalized);
       setIsPaused(paused as boolean);
 
@@ -87,24 +91,26 @@ export default function AdminPage() {
   };
 
   const togglePause = async () => {
-    if (!walletClient) return;
-    if (!publicClient) {
-      console.error('publicClient is not ready');
+    if (!walletClient || !publicClient) {
+      console.error('walletClient or publicClient not ready');
       return;
     }
-
+  
     try {
       setLoading(prev => ({ ...prev, pause: true }));
+  
+      const functionName = isPaused ? 'unpauseAirdrop' : 'pauseAirdrop';
+  
       const { request } = await publicClient.simulateContract({
         address: AIRDROP_CONTRACT_ADDRESS,
         abi: airdropAbi,
-        functionName: 'pauseAirdrop',
-        args: [!isPaused],
+        functionName,
         account: walletClient.account,
       });
-
+  
       const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
+  
       setIsPaused(!isPaused);
     } catch (err) {
       console.error('Pause toggle failed:', err);
@@ -119,7 +125,6 @@ export default function AdminPage() {
       console.error('publicClient is not ready');
       return;
     }
-
     try {
       setLoading(prev => ({ ...prev, recover: true }));
       const { request } = await publicClient.simulateContract({
@@ -131,6 +136,9 @@ export default function AdminPage() {
 
       const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
+
+      await new Promise(res => setTimeout(res, 500));
+
       await loadContractData();
     } catch (err) {
       console.error('Recovery failed:', err);
@@ -142,16 +150,12 @@ export default function AdminPage() {
   return (
     <div className="container py-8">
       <div className="max-w-4xl mx-auto bg-card rounded-lg border p-6 shadow-sm">
-        <h1 className="text-2xl font-bold mb-6">Airdrop Admin Dashboard</h1>
-
-        <div className="flex justify-center mb-6">
-          <ConnectButton showBalance={false} accountStatus="address" chainStatus="none" />
-        </div>
+        <h1 className="text-4xl font-bold text-white mb-8 text-center">Airdrop Admin Dashboard</h1>
 
         {isConnected && (
           <div className="space-y-6">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">
+          <div className="bg-muted p-4 rounded-lg">
+            <p className="text-base text-gray-300 break-all">
                 Connected wallet: <span className="font-mono">{address}</span>
               </p>
             </div>
@@ -159,30 +163,34 @@ export default function AdminPage() {
             {isOwner ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-muted p-4 rounded-lg">
-                    <h3 className="text-sm text-muted-foreground">Total Tokens</h3>
-                    <p className="text-xl font-bold">{stats.totalTokens}</p>
+                <div className="bg-gray-800 p-4 rounded-lg">
+  <h3 className="text-lg text-gray-400">Total Tokens</h3>
+  <p className="text-2xl font-bold text-white">{stats.totalTokens}</p>
+</div>
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    <h3 className="text-lg text-gray-400">Claimed</h3>
+                    <p className="text-2xl font-bold text-white">{stats.claimedTokens}</p>
                   </div>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <h3 className="text-sm text-muted-foreground">Claimed</h3>
-                    <p className="text-xl font-bold">{stats.claimedTokens}</p>
-                  </div>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <h3 className="text-sm text-muted-foreground">Remaining</h3>
-                    <p className="text-xl font-bold">{stats.remainingTokens}</p>
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    <h3 className="text-lg text-gray-400">Remaining</h3>
+                    <p className="text-2xl font-bold text-white">{stats.remainingTokens}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={togglePause}
-                    disabled={loading.pause || loading.general}
-                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    disabled={
+                      loading.pause ||
+                      loading.general ||
+                      (Number(stats.remainingTokens) === 0)
+                    }
+                    className={`px-4 py-2 rounded-md text-white font-semibold transition-all ${
                       loading.pause
-                        ? 'bg-gray-500 cursor-not-allowed'
+                        ? 'bg-gray-600 cursor-not-allowed'
                         : isPaused
-                          ? 'bg-green-600 text-primary-foreground hover:bg-green-600/90'
-                          : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-red-600 hover:bg-red-700'
                     }`}
                   >
                     {loading.pause
@@ -194,11 +202,16 @@ export default function AdminPage() {
 
                   <button
                     onClick={recoverTokens}
-                    disabled={!isPaused || loading.recover || loading.general}
-                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    disabled={
+                      !isPaused || 
+                      loading.recover || 
+                      loading.general || 
+                      Number(stats.remainingTokens) === 0
+                    }
+                    className={`px-4 py-2 rounded-md font-semibold text-white transition-all ${
                       loading.recover
-                        ? 'bg-gray-500 cursor-not-allowed'
-                        : 'bg-yellow-600 text-primary-foreground hover:bg-yellow-600/90'
+                        ? 'bg-gray-600 cursor-not-allowed'
+                        : 'bg-yellow-600 hover:bg-yellow-700'
                     }`}
                   >
                     {loading.recover ? 'Processing...' : 'Recover Unclaimed Tokens'}
@@ -219,14 +232,14 @@ export default function AdminPage() {
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border bg-background">
-                        {recentClaimers.map((claimer, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-3 text-sm font-mono">{claimer.address}</td>
-                            <td className="px-4 py-3 text-sm">{claimer.amount} tokens</td>
-                          </tr>
-                        ))}
-                      </tbody>
+                      <tbody className="divide-y divide-gray-700 bg-gray-900">
+  {recentClaimers.map((claimer, index) => (
+    <tr key={index} className="hover:bg-gray-800">
+      <td className="px-4 py-3 text-sm font-mono text-white break-all">{claimer.address}</td>
+      <td className="px-4 py-3 text-sm text-right text-white">{claimer.amount} RDT</td>
+    </tr>
+  ))}
+</tbody>
                     </table>
                   </div>
                 </div>
