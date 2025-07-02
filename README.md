@@ -2,6 +2,8 @@
 
 This is the frontend interface for interacting with an ERC20 airdrop smart contract. It allows users to verify eligibility using a Merkle proof and claim their allocated tokens directly from the browser.
 
+**Live Demo**: [airdrop-frontend.vercel.app](https://airdrop-frontend-rlks5f1ir-williams-projects-f220df19.vercel.app/)
+
 ---
 
 ## 🚀 Features
@@ -24,7 +26,7 @@ This is the frontend interface for interacting with an ERC20 airdrop smart contr
 │   ├── app/
 │   │   ├── claim/             # Claim page (for eligible users)
 │   │   ├── admin/             # Admin dashboard (optional)
-│   │   ├── api/merkle/        # Merkle endpoint (serves `output.json`)
+│   │   ├── api/merkle/        # Serves Merkle proofs (via output.json)
 │   │   ├── layout.tsx         # App layout
 │   │   ├── page.tsx           # Homepage
 │   │   └── providers.tsx      # wagmi / RainbowKit providers
