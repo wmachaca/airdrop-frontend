@@ -183,7 +183,7 @@ export default function AdminPage() {
                     disabled={
                       loading.pause ||
                       loading.general ||
-                      (Number(stats.totalTokens) === 0)
+                      (Number(stats.remainingTokens) === 0)
                     }
                     className={`px-4 py-2 rounded-md text-white font-semibold transition-all ${
                       loading.pause
