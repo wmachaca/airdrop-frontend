@@ -44,22 +44,21 @@ git clone https://github.com/wmachaca/airdrop-frontend.git
 
 cd airdrop-frontend
 
-npm install
+# Run the setup script:
 
-# Copy the Merkle tree output (typically a .json with leaf, proof, and root):
+chmod +x setup.sh
+./setup.sh
+```
 
-/src/merkle/output.json
+This script will:
 
+1. Install the dependencies: `npm install`.
+2. Copy the Merkle tree output from `../airdop-project/script/target/output.json` to `src/merkle/output.json`.
+3. Copy the ABI from `../airdop-project/abi/AirdropAbi.json` to `src/abi/airdrop.json`.
+4. Create the `.env` file from `.env.test` if it does not already exist.
 
-# Set up your environment variables:
+After running the script, replace the placeholders in `.env` with the actual values.
 
-
-NEXT_PUBLIC_ADMIN_ADDRESS=
-
-NEXT_PUBLIC_AIRDROP_CONTRACT_ADDRESS=
-
-
-# Run the development server:
+## Run the development server:
 
 npm run dev
-```
